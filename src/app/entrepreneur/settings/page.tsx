@@ -65,14 +65,21 @@ export default function SettingsPage(){
   // Hilfsfunktion ohne RegEx
   function stripTrailingSlash(x: string){ return x.endsWith('/') ? x.slice(0,-1) : x }
 
-  // Kunden-Link sicher bauen (funktioniert lokal & auf Vercel)
-  useEffect(() => {
-    const winOrigin = typeof window !== 'undefined' ? window.location.origin : ''
-    const envBase = (process.env.NEXT_PUBLIC_BASE_URL as string) || ''
-    const base = winOrigin || envBase || ''
-    const url = stripTrailingSlash(base) + '/client'
-    setPublicUrl(url)
-  }, [])
+ // Kunden-Link vom Server holen (keine process.env im Client)
+useEffect(() => {
+  (async () => {
+    try {
+      const r = await fetch('/api/public-url', { cache: 'no-store' })
+      const j = await r.json()
+      setPublicUrl(j.url || '/client')
+    } catch {
+      // Fallback lokal
+      const win = typeof window !== 'undefined' ? window.location.origin : ''
+      setPublicUrl((win || '') + '/client')
+    }
+  })()
+}, [])
+
 
   // QR nur im Browser generieren (dynamischer Import)
   useEffect(()=>{
