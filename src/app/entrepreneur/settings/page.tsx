@@ -60,21 +60,16 @@ export default function SettingsPage(){
     const r = await fetch('/api/settings/get'); const j = await r.json(); setS(j)
   })() },[])
 
-  // Kunden-Link vom Server holen (kein process.env im Client)
+  // Kunden-Link NUR clientseitig aus window.origin (keine ENV, keine Regex)
   useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch('/api/public-url', { cache: 'no-store' })
-        const j = await r.json()
-        setPublicUrl(j.url || '/client')
-      } catch {
-        const win = typeof window !== 'undefined' ? window.location.origin : ''
-        setPublicUrl((win || '') + '/client')
-      }
-    })()
+    if (typeof window !== 'undefined') {
+      setPublicUrl(window.location.origin + '/client')
+    } else {
+      setPublicUrl('/client')
+    }
   }, [])
 
-  // QR nur im Browser erzeugen
+  // QR nur im Browser generieren (dynamisch importieren)
   useEffect(()=>{
     let alive = true
     ;(async ()=>{
@@ -185,7 +180,7 @@ export default function SettingsPage(){
           ))}
         </section>
 
-        {/* Feiertage/Abwesenheiten */}
+        {/* Feiertage */}
         <section className="grid gap-3">
           <div className="font-medium">Feiertage / geschlossen</div>
           <div className="grid md:grid-cols-4 gap-3">
@@ -231,9 +226,6 @@ export default function SettingsPage(){
             ) : (
               <div className="text-sm opacity-70">QR optional – wird nur im Browser generiert.</div>
             )}
-          </div>
-          <div className="text-xs opacity-70">
-            Für Deploy: <code>NEXT_PUBLIC_BASE_URL</code> in Vercel setzen (z. B. <code>https://velora-xyz.vercel.app</code>).
           </div>
         </section>
 
