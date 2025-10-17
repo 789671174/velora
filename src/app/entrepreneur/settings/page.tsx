@@ -51,7 +51,8 @@ export default function SettingsPage(){
 
   const [rangeFrom, setRangeFrom] = useState('')
   const [rangeTo, setRangeTo] = useState('')
-  const ranges = useMemo(()=> compressToRanges(s?.holidays ?? []), [s?.holidays?.join(',')])
+  const holidaysKey = s?.holidays?.join('|') ?? ''
+  const ranges = useMemo(() => compressToRanges(s?.holidays ?? []), [holidaysKey])
 
   const [publicUrl, setPublicUrl] = useState<string>('')
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
@@ -62,11 +63,11 @@ export default function SettingsPage(){
 
   // Kunden-Link NUR clientseitig aus window.origin (keine ENV, keine Regex)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setPublicUrl(window.location.origin + '/client')
-    } else {
-      setPublicUrl('/client')
-    }
+    const url =
+      typeof window !== 'undefined'
+        ? new URL('/client', window.location.origin).toString()
+        : '/client'
+    setPublicUrl(url)
   }, [])
 
   // QR nur im Browser generieren (dynamisch importieren)
@@ -75,10 +76,15 @@ export default function SettingsPage(){
     ;(async ()=>{
       try{
         if (!publicUrl) return
-        const mod = await import('qrcode')
-        const data = await mod.toDataURL(publicUrl, { margin: 1, width: 192 })
+        const mod = await import('qrcode/esm')
+        const toDataURL = mod.toDataURL ?? mod.default?.toDataURL
+        if (!toDataURL) throw new Error('QR module has no toDataURL export')
+        const data = await toDataURL(publicUrl, { margin: 1, width: 192 })
         if (alive) setQrDataUrl(data)
-      }catch{ if (alive) setQrDataUrl('') }
+      }catch (err){
+        console.error('QR generation failed', err)
+        if (alive) setQrDataUrl('')
+      }
     })()
     return ()=>{ alive = false }
   }, [publicUrl])
@@ -201,7 +207,7 @@ export default function SettingsPage(){
             {ranges.length === 0 && <div className="text-sm opacity-70">Keine Einträge.</div>}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
               {ranges.map(r => (
-                <div key={${r.from}_} className="flex items-center justify-between p-2 rounded-xl border dark:border-gray-700">
+                <div key={`${r.from}_${r.to}`} className="flex items-center justify-between p-2 rounded-xl border dark:border-gray-700">
                   <span>{r.from} — {r.to}</span>
                   <button className="btn" onClick={()=>removeRange(r)}>Entfernen</button>
                 </div>
