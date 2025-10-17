@@ -79,8 +79,10 @@ export default function SettingsPage(){
     ;(async ()=>{
       try{
         if (!publicUrl) return
-        const mod = await import('qrcode')
-        const data = await mod.toDataURL(publicUrl, { margin: 1, width: 192 })
+        const mod = await import('qrcode/esm')
+        const toDataURL = mod.toDataURL ?? mod.default?.toDataURL
+        if (!toDataURL) throw new Error('QR module has no toDataURL export')
+        const data = await toDataURL(publicUrl, { margin: 1, width: 192 })
         if (alive) setQrDataUrl(data)
       }catch (err){
         console.error('QR generation failed', err)
