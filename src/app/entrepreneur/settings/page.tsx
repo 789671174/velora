@@ -9,8 +9,8 @@ type Settings = {
   smsFrom: string
   slotMinutes: number
   opening: Record<string, Hours>
-  holidays: string[]         // intern Einzeltage (YYYY-MM-DD)
-  logoUrl?: string           // Base64/URL
+  holidays: string[]
+  logoUrl?: string
 }
 
 const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag']
@@ -62,33 +62,28 @@ export default function SettingsPage(){
     const r = await fetch('/api/settings/get'); const j = await r.json(); setS(j)
   })() },[])
 
-  useEffect(()=>{
-    const base =
+  // Hilfsfunktion ohne RegEx
+  function stripTrailingSlash(x: string){ return x.endsWith('/') ? x.slice(0,-1) : x }
+
+  // Kunden-Link sicher bauen (funktioniert lokal & auf Vercel)
   useEffect(() => {
-  // Sichere URL für QR-Code generieren
-  const base =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_BASE_URL || "";
+    const winOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+    const envBase = (process.env.NEXT_PUBLIC_BASE_URL as string) || ''
+    const base = winOrigin || envBase || ''
+    const url = stripTrailingSlash(base) + '/client'
+    setPublicUrl(url)
+  }, [])
 
-  const url = `${base}/client`;
-  setPublicUrl(url);
-}, []);
-
-  // QR dynamisch und nur im Client generieren
+  // QR nur im Browser generieren (dynamischer Import)
   useEffect(()=>{
     let alive = true
     ;(async ()=>{
       try{
         if (!publicUrl) return
-        const mod = await import('qrcode')   // <— dynamisch
+        const mod = await import('qrcode')
         const data = await mod.toDataURL(publicUrl, { margin: 1, width: 192 })
         if (alive) setQrDataUrl(data)
-      }catch(e){
-        // QR optional – Seite soll trotzdem laufen
-        if (alive) setQrDataUrl('')
-        console.warn('QR-Gen fehlgeschlagen:', e)
-      }
+      }catch{ if (alive) setQrDataUrl('') }
     })()
     return ()=>{ alive = false }
   }, [publicUrl])
@@ -238,7 +233,7 @@ export default function SettingsPage(){
             )}
           </div>
           <div className="text-xs opacity-70">
-            Für Deploy: <code>NEXT_PUBLIC_BASE_URL</code> in Vercel setzen (z. B. <code>https://dein-name.vercel.app</code>).
+            Für Deploy: <code>NEXT_PUBLIC_BASE_URL</code> in Vercel setzen (z. B. <code>https://velora-xyz.vercel.app</code>).
           </div>
         </section>
 
