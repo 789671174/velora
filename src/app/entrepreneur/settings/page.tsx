@@ -64,12 +64,16 @@ export default function SettingsPage(){
 
   useEffect(()=>{
     const base =
-      (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_URL)
-        ? process.env.NEXT_PUBLIC_BASE_URL!
-        : (typeof window !== 'undefined' ? window.location.origin : '')
-    const url = base ? `${base.replace(/\\/$/, '')}/client` : '/client'
-    setPublicUrl(url)
-  }, [])
+  useEffect(() => {
+  // Sichere URL für QR-Code generieren
+  const base =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_BASE_URL || "";
+
+  const url = `${base}/client`;
+  setPublicUrl(url);
+}, []);
 
   // QR dynamisch und nur im Client generieren
   useEffect(()=>{
