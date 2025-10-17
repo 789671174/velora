@@ -63,14 +63,11 @@ export default function SettingsPage(){
 
   // Kunden-Link NUR clientseitig aus window.origin (keine ENV, keine Regex)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const origin = window.location.origin.endsWith('/')
-        ? window.location.origin.slice(0, -1)
-        : window.location.origin
-      setPublicUrl(origin + '/client')
-    } else {
-      setPublicUrl('/client')
-    }
+    const url =
+      typeof window !== 'undefined'
+        ? new URL('/client', window.location.origin).toString()
+        : '/client'
+    setPublicUrl(url)
   }, [])
 
   // QR nur im Browser generieren (dynamisch importieren)
