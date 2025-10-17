@@ -13,6 +13,10 @@ npm run dev
 
 In DEV sind E-Mail und SMS **simuliert**. Öffnungszeiten/Feiertage in **Einstellungen** pflegen.
 
+## Öffentlicher Buchungslink
+- Die Unternehmer-Einstellungen erzeugen den Link clientseitig über `window.location.origin + '/client'`. Dadurch ist keine Build-Zeit-Umgebungsvariable erforderlich.
+- Optional kann auf Vercel `NEXT_PUBLIC_BASE_URL` gesetzt werden. Die API `/api/public-url` nutzt diesen Wert als Fallback für Fälle, in denen kein Origin-Header vorhanden ist.
+
 ## Produktion / Provider
 - Mails via Resend: setze `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`.
 - SMS via Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`.
