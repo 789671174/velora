@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 
 type Hours = { active: boolean; start: string; end: string }
@@ -49,12 +49,10 @@ export default function SettingsPage(){
   const [s, setS] = useState<Settings | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // Von–bis UI
   const [rangeFrom, setRangeFrom] = useState('')
   const [rangeTo, setRangeTo] = useState('')
   const ranges = useMemo(()=> compressToRanges(s?.holidays ?? []), [s?.holidays?.join(',')])
 
-  // Öffentlicher Link + QR
   const [publicUrl, setPublicUrl] = useState<string>('')
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
 
@@ -62,26 +60,21 @@ export default function SettingsPage(){
     const r = await fetch('/api/settings/get'); const j = await r.json(); setS(j)
   })() },[])
 
-  // Hilfsfunktion ohne RegEx
-  function stripTrailingSlash(x: string){ return x.endsWith('/') ? x.slice(0,-1) : x }
+  // Kunden-Link vom Server holen (kein process.env im Client)
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/public-url', { cache: 'no-store' })
+        const j = await r.json()
+        setPublicUrl(j.url || '/client')
+      } catch {
+        const win = typeof window !== 'undefined' ? window.location.origin : ''
+        setPublicUrl((win || '') + '/client')
+      }
+    })()
+  }, [])
 
- // Kunden-Link vom Server holen (keine process.env im Client)
-useEffect(() => {
-  (async () => {
-    try {
-      const r = await fetch('/api/public-url', { cache: 'no-store' })
-      const j = await r.json()
-      setPublicUrl(j.url || '/client')
-    } catch {
-      // Fallback lokal
-      const win = typeof window !== 'undefined' ? window.location.origin : ''
-      setPublicUrl((win || '') + '/client')
-    }
-  })()
-}, [])
-
-
-  // QR nur im Browser generieren (dynamischer Import)
+  // QR nur im Browser erzeugen
   useEffect(()=>{
     let alive = true
     ;(async ()=>{
@@ -213,7 +206,7 @@ useEffect(() => {
             {ranges.length === 0 && <div className="text-sm opacity-70">Keine Einträge.</div>}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
               {ranges.map(r => (
-                <div key={`${r.from}_${r.to}`} className="flex items-center justify-between p-2 rounded-xl border dark:border-gray-700">
+                <div key={${r.from}_} className="flex items-center justify-between p-2 rounded-xl border dark:border-gray-700">
                   <span>{r.from} — {r.to}</span>
                   <button className="btn" onClick={()=>removeRange(r)}>Entfernen</button>
                 </div>
